@@ -11,12 +11,26 @@ async function bootstrap() {
   app.setGlobalPrefix("api/v1");
 
   // Conecta este mismo proceso como consumidor RabbitMQ además de servidor HTTP,
-  // para escuchar user.created de forma asíncrona.
+  // para escuchar user.created/user.deleted/tutor.verification.updated de forma asíncrona.
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.RMQ,
     options: {
       urls: [process.env.RABBITMQ_URL || "amqp://guest:guest@localhost:5672"],
       queue: "user_events_queue",
+      queueOptions: { durable: true },
+    },
+  });
+
+  // Segunda conexión de microservicio, a una cola distinta: Nest permite
+  // varios connectMicroservice() en la misma app, cada uno escuchando su
+  // propia cola (igual que ya hacía booking-service con session_events_queue
+  // además de su propio tráfico HTTP). feedback-service publica aquí
+  // feedback.rating.updated (sección 5.11 del documento).
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.RMQ,
+    options: {
+      urls: [process.env.RABBITMQ_URL || "amqp://guest:guest@localhost:5672"],
+      queue: "feedback_rating_events_queue",
       queueOptions: { durable: true },
     },
   });
