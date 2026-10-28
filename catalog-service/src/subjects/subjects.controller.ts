@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Param, Post, UseGuards } from "@nestjs/common";
 import { SubjectsService } from "./subjects.service";
 import { CreateSubjectDto } from "./dto/create-subject.dto";
 import { JwtRolesGuard } from "../common/jwt-roles.guard";
@@ -19,5 +19,13 @@ export class SubjectsController {
   @Roles("admin")
   create(@Body() dto: CreateSubjectDto) {
     return this.subjectsService.create(dto);
+  }
+
+  // Permiso de admin: eliminar una materia del catálogo.
+  @Delete(":id")
+  @UseGuards(JwtRolesGuard)
+  @Roles("admin")
+  remove(@Param("id") id: string) {
+    return this.subjectsService.remove(id);
   }
 }
